@@ -1,22 +1,21 @@
-from typing import Final
 import os
+import joblib
+from typing import Final
 from dotenv import load_dotenv
 from discord import Intents, Client, Message
 from responses import get_response
 from keep_alive import keep_alive
+from better_profanity import profanity
 keep_alive()
 
-# STEP 0: LOAD OUR TOKEN FROM SOMEWHERE SAFE
 load_dotenv()
 TOKEN: Final[str] = os.getenv('discord-token')
+# print(TOKEN)
 
-# STEP 1: BOT SETUP
 intents: Intents = Intents.default()
 intents.message_content = True
 client: Client = Client(intents=intents)
 
-
-# STEP 2: MESSAGE FUNCTIONALITY
 async def send_message(message: Message, user_message: str) -> None:
     if not user_message:
         print('(Message was empty because intents were not enabled probably)')
@@ -35,14 +34,17 @@ async def send_message(message: Message, user_message: str) -> None:
     except Exception as e:
         print(e)
 
+clf = joblib.load('spam_model.pkl')
+vectorizer = joblib.load('vectorizer.pkl')
+def is_spam(text):
+    text_vec = vectorizer.transform([text])
+    prediction:bool = clf.predict(text_vec)[0]
+    return prediction
 
-# STEP 3: HANDLING THE STARTUP FOR OUR BOT
 @client.event
 async def on_ready() -> None:
     print(f'{client.user} is now running!')
 
-
-# STEP 4: HANDLING INCOMING MESSAGES
 @client.event
 async def on_message(message: Message) -> None:
     if message.author == client.user:
@@ -52,13 +54,23 @@ async def on_message(message: Message) -> None:
     user_message: str = message.content
     channel: str = str(message.channel)
 
-    print(f'[{channel}] {username}: "{user_message}"')
-    await send_message(message, user_message)
+    # print(f'[{channel}] {username}: "{user_message}"')
+    # await send_message(message, user_message)
 
+    content = message.content.lower()
 
-# STEP 5: MAIN ENTRY POINT
+    if profanity.contains_profanity(content):
+        await message.delete()
+        await message.author.send("Please refrain from using profanity.")
+    if is_spam(content):
+        await message.delete()
+        await message.author.send("Please refrain from sending spam to the server.")
+
 def main() -> None:
-    client.run(token=TOKEN)
+    try:
+        client.run(TOKEN)
+    except Exception as e:
+        print("❌ Bot failed:", e)
 
 
 if __name__ == '__main__':
