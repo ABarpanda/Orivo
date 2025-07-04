@@ -7,3 +7,6 @@ scikit-learn
 requests
 numpy
 pandas
+pymongo
+datetime
+pillow

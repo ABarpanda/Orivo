@@ -3,36 +3,19 @@ import joblib
 from typing import Final
 from dotenv import load_dotenv
 from discord import Intents, Client, Message
-# from functions.responses import get_response
 from functions.keep_alive import keep_alive
+# from functions.nsfw_check import is_nsfw
+import functions.mongo_connect  as mongo_connect
 from better_profanity import profanity
+import datetime
 keep_alive()
 
 load_dotenv()
 TOKEN: Final[str] = os.getenv('discord-token')
-# print(TOKEN)
 
 intents: Intents = Intents.default()
 intents.message_content = True
 client: Client = Client(intents=intents)
-
-# async def send_message(message: Message, user_message: str) -> None:
-#     if not user_message:
-#         print('(Message was empty because intents were not enabled probably)')
-#         return
-
-#     if user_message[0] == '?':
-#         is_private = True
-#     else: is_private = False
-
-#     if is_private:
-#         user_message = user_message[1:]
-
-#     try:
-#         response: str = get_response(user_message)
-#         await message.author.send(response) if is_private else await message.channel.send(response)
-#     except Exception as e:
-#         print(e)
 
 clf = joblib.load('spam_model.pkl')
 vectorizer = joblib.load('vectorizer.pkl')
@@ -50,27 +33,33 @@ async def on_message(message: Message) -> None:
     if message.author == client.user:
         return
 
-    username: str = str(message.author)
+    author: str = str(message.author)
     user_message: str = message.content
     channel: str = str(message.channel)
-
-    # print(f'[{channel}] {username}: "{user_message}"')
-    # await send_message(message, user_message)
-
-    content = message.content.lower()
+    content:str = message.content.lower()
+    document_format = {"timestamp": datetime.datetime.now().strftime("%d/%m/%Y, %H:%M:%S"), 
+                        "username": author,
+                        "message":user_message,
+                        "channel":channel
+                        }
 
     if profanity.contains_profanity(content):
+        mongo_connect.create("Profanity",document_format)
         await message.delete()
-        await message.author.send("Please refrain from using profanity.")
+        await message.author.send(f"The message sent by you - \n\"{message.content}\" \nis not acceptable in our server.")
+        await message.author.send("Please refrain from using profanity.\nRepeat offenders may be banned from the server")
+
     if is_spam(content):
+        mongo_connect.create("Spam",document_format)
         await message.delete()
-        await message.author.send("Please refrain from sending spam to the server.")
+        await message.author.send(f"The message sent by you - \n\"{message.content}\" \nis not acceptable in our server")
+        await message.author.send("Please refrain from sending spam to the server.\nRepeat offenders may be banned from the server")
 
 def main() -> None:
     try:
         client.run(TOKEN)
     except Exception as e:
-        print("❌ Bot failed:", e)
+        print("Bot failed:", e)
 
 
 if __name__ == '__main__':

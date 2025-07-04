@@ -1,4 +1,5 @@
 import joblib
+import datetime
 
 clf = joblib.load('spam_model.pkl')
 vectorizer = joblib.load('vectorizer.pkl')
@@ -10,3 +11,5 @@ def predict_spam(text):
 
 print(predict_spam("Free money!!! Click here to claim your prize."))
 print(predict_spam("Congratulations! You've won a $1000 Walmart gift card. Click here!"))
+
+print(datetime.datetime.now().strftime("%d/%m/%Y, %H:%M:%S"))
