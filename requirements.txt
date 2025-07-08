@@ -10,3 +10,4 @@ pandas
 pymongo
 datetime
 pillow
+python-Levenshtein

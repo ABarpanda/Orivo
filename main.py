@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from discord import Intents, Client, Message
 from functions.keep_alive import keep_alive
 # from functions.nsfw_check import is_nsfw
+from functions.hindi_profanity import containsHindiSlang
 import functions.mongo_connect  as mongo_connect
 from better_profanity import profanity
 import datetime
@@ -44,13 +45,28 @@ async def on_message(message: Message) -> None:
                         }
 
     if profanity.contains_profanity(content):
-        mongo_connect.create("Profanity",document_format)
+        try:
+            mongo_connect.create("Profanity",document_format)
+        except Exception as e:
+            print("Bot failed:", e)
+        await message.delete()
+        await message.author.send(f"The message sent by you - \n\"{message.content}\" \nis not acceptable in our server.")
+        await message.author.send("Please refrain from using profanity.\nRepeat offenders may be banned from the server")
+
+    if containsHindiSlang(content):
+        try:
+            mongo_connect.create("Profanity",document_format)
+        except Exception as e:
+            print("Bot failed:", e)
         await message.delete()
         await message.author.send(f"The message sent by you - \n\"{message.content}\" \nis not acceptable in our server.")
         await message.author.send("Please refrain from using profanity.\nRepeat offenders may be banned from the server")
 
     if is_spam(content):
-        mongo_connect.create("Spam",document_format)
+        try:
+            mongo_connect.create("Spam",document_format)
+        except Exception as e:
+            print("Bot failed:", e)
         await message.delete()
         await message.author.send(f"The message sent by you - \n\"{message.content}\" \nis not acceptable in our server")
         await message.author.send("Please refrain from sending spam to the server.\nRepeat offenders may be banned from the server")

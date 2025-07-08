@@ -22,7 +22,7 @@ async def on_message(message):
     if message.attachments:
         for attachment in message.attachments:
             if attachment.content_type and attachment.content_type.startswith("image/"):
-                print(f"🖼️ Image from {message.author}: {attachment.url}")
+                print(f" Image from {message.author}: {attachment.url}")
 
                 # Optional: download the image
                 await save_image(attachment)
