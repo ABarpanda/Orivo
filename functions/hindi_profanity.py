@@ -13,10 +13,10 @@ def isHindiSlang(user_word:str, threshold:float=0.9)->bool:
         max_ = max(similarity, max_)
         # print(f"word = {word} and similarity = {similarity}, max = {max_}")
     if max_>threshold:
-        if max_<1:
-            with open("functions/hindi_slang.csv","a") as slang_file:
-                slang_file.write(f",{user_word}")
-            print("New word added")
+        # if max_<1:
+        #     with open("functions/hindi_slang.csv","a") as slang_file:
+        #         slang_file.write(f",{user_word}")
+        #     print("New word added")
         return True
     return False
 

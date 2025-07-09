@@ -4,7 +4,7 @@ from typing import Final
 from dotenv import load_dotenv
 from discord import Intents, Client, Message
 from functions.keep_alive import keep_alive
-# from functions.nsfw_check import is_nsfw
+from functions.nsfw_check import NSFWDetector
 from functions.hindi_profanity import containsHindiSlang
 import functions.mongo_connect  as mongo_connect
 from better_profanity import profanity
@@ -18,8 +18,11 @@ intents: Intents = Intents.default()
 intents.message_content = True
 client: Client = Client(intents=intents)
 
+detector = NSFWDetector()
+
 clf = joblib.load('spam_model.pkl')
 vectorizer = joblib.load('vectorizer.pkl')
+
 def is_spam(text):
     text_vec = vectorizer.transform([text])
     prediction:bool = clf.predict(text_vec)[0]
@@ -51,7 +54,7 @@ async def on_message(message: Message) -> None:
             print("Bot failed:", e)
         await message.delete()
         await message.author.send(f"The message sent by you - \n\"{message.content}\" \nis not acceptable in our server.")
-        await message.author.send("Please refrain from using profanity.\nRepeat offenders may be banned from the server")
+        await message.author.send("Please refrain from using profanity.\nRepeat offenders will be banned from the server")
 
     if containsHindiSlang(content):
         try:
@@ -60,7 +63,7 @@ async def on_message(message: Message) -> None:
             print("Bot failed:", e)
         await message.delete()
         await message.author.send(f"The message sent by you - \n\"{message.content}\" \nis not acceptable in our server.")
-        await message.author.send("Please refrain from using profanity.\nRepeat offenders may be banned from the server")
+        await message.author.send("Please refrain from using profanity.\nRepeat offenders will be banned from the server")
 
     if is_spam(content):
         try:
@@ -69,7 +72,24 @@ async def on_message(message: Message) -> None:
             print("Bot failed:", e)
         await message.delete()
         await message.author.send(f"The message sent by you - \n\"{message.content}\" \nis not acceptable in our server")
-        await message.author.send("Please refrain from sending spam to the server.\nRepeat offenders may be banned from the server")
+        await message.author.send("Please refrain from sending spam to the server.\nRepeat offenders will be banned from the server")
+    
+    if message.attachments:
+        try:
+            all_attachments = message.attachments
+            num_attachments = len(message.attachments)
+            for attachment_index in range(num_attachments):
+                file_bytes = await all_attachments[attachment_index].read()
+                is_nsfw = await detector.classify(file_bytes)
+                if is_nsfw==True:
+                    await message.delete()
+                    await message.author.send(f"The message sent by you - \n\"{message.attachments[attachment_index]}\" \nis not acceptable in our server")
+                    await message.author.send("Please refrain from sending NSFW images to the server.\nRepeat offenders will be banned from the server")
+                    break
+
+        except Exception as e:
+            print("❌ Error while processing image.")
+            print(f"[ERROR] {e}")
 
 def main() -> None:
     try:
