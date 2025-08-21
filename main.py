@@ -6,13 +6,13 @@ from discord import Intents, Client, Message
 from functions.keep_alive import keep_alive
 from functions.nsfw_check import NSFWDetector
 from functions.hindi_profanity import containsHindiSlang
-import functions.mongo_connect  as mongo_connect
+import functions.mongo_connect as mongo_connect
 from better_profanity import profanity
 import datetime
 keep_alive()
 
 load_dotenv()
-TOKEN: Final[str] = os.getenv('discord-token')
+TOKEN: Final[str] = os.getenv('discord-token') # Ignore the error here
 
 intents: Intents = Intents.default()
 intents.message_content = True
@@ -41,6 +41,7 @@ async def on_message(message: Message) -> None:
     user_message: str = message.content
     channel: str = str(message.channel)
     content:str = message.content.lower()
+
     document_format = {"timestamp": datetime.datetime.now().strftime("%d/%m/%Y, %H:%M:%S"), 
                         "username": author,
                         "message":user_message,
@@ -97,6 +98,6 @@ def main() -> None:
     except Exception as e:
         print("Bot failed:", e)
 
-
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8080))  # default 8080 locally
+    app.run(host="0.0.0.0", port=port, debug=False)
