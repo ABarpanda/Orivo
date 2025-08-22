@@ -6,13 +6,13 @@ from discord import Intents, Client, Message
 from functions.keep_alive import keep_alive
 from functions.nsfw_check import NSFWDetector
 from functions.hindi_profanity import containsHindiSlang
-import functions.mongo_connect  as mongo_connect
+import functions.mongo_connect as mongo_connect
 from better_profanity import profanity
 import datetime
 keep_alive()
 
 load_dotenv()
-TOKEN: Final[str] = os.getenv('discord-token')
+TOKEN: Final[str] = os.getenv('discord-token') # Ignore the error here
 
 intents: Intents = Intents.default()
 intents.message_content = True
