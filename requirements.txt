@@ -11,7 +11,7 @@ pymongo
 datetime
 Pillow
 python-Levenshtein
-transformers
-torch==2.3.1+cpu
+transformers==4.45.3
+torch==2.8.0+cpu
 --extra-index-url https://download.pytorch.org/whl/cpu
 gunicorn
