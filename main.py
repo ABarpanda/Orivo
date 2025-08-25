@@ -4,7 +4,7 @@ from typing import Final
 from dotenv import load_dotenv
 from discord import Intents, Client, Message
 from functions.keep_alive import keep_alive
-from functions.nsfw_check import NSFWDetector
+# from functions.nsfw_check import NSFWDetector
 from functions.hindi_profanity import containsHindiSlang
 import functions.mongo_connect as mongo_connect
 from better_profanity import profanity
@@ -18,7 +18,7 @@ intents: Intents = Intents.default()
 intents.message_content = True
 client: Client = Client(intents=intents)
 
-detector = NSFWDetector()
+# detector = NSFWDetector()
 
 clf = joblib.load('spam_model.pkl')
 vectorizer = joblib.load('vectorizer.pkl')
@@ -80,7 +80,7 @@ async def on_message(message: Message) -> None:
             num_attachments = len(message.attachments)
             for attachment_index in range(num_attachments):
                 file_bytes = await all_attachments[attachment_index].read()
-                is_nsfw = await detector.classify(file_bytes)
+                # is_nsfw = await detector.classify(file_bytes)
                 if is_nsfw==True:
                     await message.delete()
                     await message.author.send(f"The message sent by you - \n\"{message.attachments[attachment_index]}\" \nis not acceptable in our server")
